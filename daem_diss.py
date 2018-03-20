@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#try
 
 from PyQt4 import QtGui, QtCore, uic
 from scipy import optimize
