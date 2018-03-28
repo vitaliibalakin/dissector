@@ -11,8 +11,6 @@ class DialSave(QtGui.QDialog):
 
         self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
         self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
-
-        self.chan_cur.valueMeasured.connect(self.new_val_cb)
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
 
@@ -24,27 +22,31 @@ class DialSave(QtGui.QDialog):
 
         self.cur_data = []
         self.sigma_data = []
-        self.counter = {'cxhw:0.e_diss.fit_sigma': 0, 'cxhw:0.dcct.beamcurrent': 0}
+        self.counter = 0
         self.chans = {'cxhw:0.e_diss.fit_sigma': self.sigma_data, 'cxhw:0.dcct.beamcurrent': self.cur_data}
 
     def push_btn_save(self):
-        self.lbl_status.setText("Saving")
-        #self.counter['cxhw:0.e_diss.fit_sigma'] = self.av_num
-        self.counter['cxhw:0.dcct.beamcurrent'] = self.av_num
+        if self.ln_filename.text() == 'Write the name of file':
+            self.lbl_status.setText("No filename")
+        else:
+            self.lbl_status.setText("Saving")
+            self.counter = self.av_num
 
-    def new_val_cb(self, chan):
-        if self.counter[chan.name] != 0:
-            self.chans[chan.name][self.counter[chan.name] - 1] = chan.val
-            self.counter[chan.name] -= 1
-            print self.counter.values()
-            if any(self.counter.values()):
+    def new_val_cb(self):
+        if self.counter != 0:
+            print self.counter
+            self.chans['cxhw:0.e_diss.fit_sigma'][self.counter - 1] = self.chan_sigma .val
+            self.chans['cxhw:0.dcct.beamcurrent'][self.counter - 1] = self.chan_cur.val
+            self.counter -= 1
+            if self.counter:
                 pass
             else:
-                self.wr_data[0] = self.chans['cxhw:0.dcct.beamcurrent']
-                self.wr_data[1] = self.chans['cxhw:0.e_diss.fit_sigma']
+                self.wr_data[0] = np.mean(self.chans['cxhw:0.dcct.beamcurrent'])
+                self.wr_data[1] = np.mean(self.chans['cxhw:0.e_diss.fit_sigma'])
+                self.wr_data[2] = np.sqrt(np.sum((self.chans['cxhw:0.e_diss.fit_sigma'] - self.wr_data[1]) ** 2))
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
-                self.f.write(str(self.av_num))
-                self.f.write('\n')
+
+                print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
                 print(self.chans['cxhw:0.dcct.beamcurrent'])
                 self.lbl_status.setText("The value was saved")
         else:
@@ -55,11 +57,9 @@ class DialSave(QtGui.QDialog):
             date = datetime.datetime.now().strftime('%Y-%m-%d')
             self.f = open(self.ln_filename.text() + '_' + date + '.dat', 'w')
             self.av_num = self.box_av_num.value()
-            self.wr_data = np.zeros((2, self.av_num), dtype=np.double)
-            self.chans['cxhw:0.e_diss.fit_sigma'] = [1, 2, 3, 4,
-                                                     5]  # np.zeros((self.counter['cxhw:0.e_diss.fit_sigma'],), dtype=np.double)
-            self.chans['cxhw:0.dcct.beamcurrent'] = np.zeros((self.av_num,),
-                                                             dtype=np.double)
+            self.wr_data = np.zeros((3, 1), dtype=np.double)
+            self.chans['cxhw:0.e_diss.fit_sigma'] = np.zeros((self.av_num,), dtype=np.double)
+            self.chans['cxhw:0.dcct.beamcurrent'] = np.zeros((self.av_num,), dtype=np.double)
             self.lbl_status.setText('Meas began')
         else:
             self.lbl_status.setText('Write the filename')
