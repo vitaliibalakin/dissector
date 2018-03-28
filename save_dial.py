@@ -46,8 +46,8 @@ class DialSave(QtGui.QDialog):
                 self.wr_data[2] = np.sqrt(np.sum((self.chans['cxhw:0.e_diss.fit_sigma'] - self.wr_data[1]) ** 2))
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
 
-                print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
-                print(self.chans['cxhw:0.dcct.beamcurrent'])
+                #print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
+                #print(self.chans['cxhw:0.dcct.beamcurrent'])
                 self.lbl_status.setText("The value was saved")
         else:
             pass
