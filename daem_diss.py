@@ -19,7 +19,7 @@ class DissApp(object):
         self.number_thinned = 10
         self.delay = 17000
 
-        self.CALIBRATE = 5.0 / 10000 * self.number_thinned * 1
+        self.CALIBRATE = 5.45 / 10000 * self.number_thinned * 1
 
         self.chan_data.valueMeasured.connect(self.data_processing)
 
