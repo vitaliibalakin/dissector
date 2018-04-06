@@ -1,9 +1,12 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5.QtWidgets import QApplication, QMainWindow
 
 import sys, pycx4.qcda as cda
 
-app = QtGui.QApplication(sys.argv)
-cur = cda.DChan("canhw:12.rst5.c5M4.Iset")
-cur.setValue(1000)
-print("ok")
+
+def check():
+    print(cur.val)
+
+app = QApplication(sys.argv)
+cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+cur.valueMeasured.connect(check)
 sys.exit(app.exec_())
