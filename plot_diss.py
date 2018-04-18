@@ -53,7 +53,7 @@ class PlotDissectorData(QtGui.QMainWindow):
 
         self.sigma.setText(str(round(self.chan_sigma.val, 3)))
         #self.peak.setText(str(round(self.chan_t0.val, 3)))
-        self.ampl.setText(str(round(self.chan_amplitude.val, 3)))
+        self.ampl.setText(str(round(self.chan_t0.val, 3)))
 
         self.diss_plot.clear()
         self.diss_plot.plot(x_fit_data, y_data, pen=None, symbol='o')

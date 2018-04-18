@@ -11,6 +11,7 @@ class DialSave(QtGui.QDialog):
 
         self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
         self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+        self.chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
 
@@ -35,7 +36,7 @@ class DialSave(QtGui.QDialog):
     def new_val_cb(self):
         if self.counter != 0:
             print self.counter
-            self.chans['cxhw:0.e_diss.fit_sigma'][self.counter - 1] = self.chan_sigma .val
+            self.chans['cxhw:0.e_diss.fit_sigma'][self.counter - 1] = self.chan_t0.val  # sigma -> t0
             self.chans['cxhw:0.dcct.beamcurrent'][self.counter - 1] = self.chan_cur.val
             self.counter -= 1
             if self.counter:
@@ -45,7 +46,7 @@ class DialSave(QtGui.QDialog):
                 self.wr_data[1] = np.mean(self.chans['cxhw:0.e_diss.fit_sigma'])
                 self.wr_data[2] = np.sqrt(np.sum((self.chans['cxhw:0.e_diss.fit_sigma'] - self.wr_data[1]) ** 2))
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
-
+                print self.wr_data.T
                 #print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
                 #print(self.chans['cxhw:0.dcct.beamcurrent'])
                 self.lbl_status.setText("The value was saved")
