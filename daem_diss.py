@@ -59,6 +59,7 @@ class DissApp(object):
         #     errfunc = lambda p, x, y: gaussfit(p, x) - y_data
         #     p = [0.07, y_data.argmax(), 100, 0]
         #     p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
+        # jjf
 
         if y_data.max() > 30:
             try:
