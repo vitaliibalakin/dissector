@@ -54,44 +54,50 @@ class DissApp(object):
         return y_thinned
 
     def fit(self, x_data, y_data):
-        # if y_data.max() > 30:
-        #     gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
-        #     errfunc = lambda p, x, y: gaussfit(p, x) - y_data
-        #     p = [0.07, y_data.argmax(), 100, 0]
-        #     p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
-        # jjf
-
         if y_data.max() > 30:
-            try:
-                erf_x = np.empty_like(x_data, dtype=np.float64)
-                for i in range(0, erf_x.__len__()):
-                    erf_x[i] = self.erf(x_data[i])
-                modelfit = lambda p, x: p[3] + (mh.sqrt(2/mh.pi)/p[0]) * p[4] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) / \
-                                               (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - erf_x)
+            gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
+            errfunc = lambda p, x, y: gaussfit(p, x) - y_data
+            p = [0.07, (y_data.argmax()-1000) * self.CALIBRATE, 0.5, 0]
+            p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
 
-                errfunc = lambda p, x, y: modelfit(p, x) - y_data
-                p = [-4, (y_data.argmax()-1000) * self.CALIBRATE, 0.5, 0, 4 * y_data.max()]
+            self.chan_fit_data.setValue(gaussfit(p1, x_data))
+            self.chan_time_fit_data.setValue(x_data)
+            self.chan_amplitude.setValue(p1[0])
+            self.chan_t0.setValue((y_data.argmax() - 1000) * self.CALIBRATE)
+            self.chan_sigma.setValue(abs(p1[2]))
 
-                p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
-
-                # print(p1)
-                self.chan_fit_data.setValue(modelfit(p1, x_data))
-
-                self.chan_time_fit_data.setValue(x_data)
+        # if y_data.max() > 30:
+        #     try:
+        #         modelfit = lambda p, x: p[3] + (mh.sqrt(2/mh.pi)/p[0]) * p[4] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) / \
+        #                                        (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - self.erf((x - p[1]) / mh.sqrt(2) * p[2]))
+        #
+        #         errfunc = lambda p, x, y: modelfit(p, x) - y_data
+        #         p = [-4, (y_data.argmax()-1000) * self.CALIBRATE, 0.5, 0, 4 * y_data.max()]
+        #
+        #         p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
+        #
+        #         print("4", p1)
+        #         self.chan_fit_data.setValue(modelfit(p1, x_data))
+        #
+        #         self.chan_time_fit_data.setValue(x_data)
 
                 # p1[1] *= self.CALIBRATE
                 # p1[2] *= self.CALIBRATE*200
                 # print p1[1], y_data.argmax() * self.CALIBRATE
-                self.chan_amplitude.setValue(p1[0])
-                self.chan_t0.setValue((y_data.argmax()-1000) * self.CALIBRATE)
-                self.chan_sigma.setValue(abs(p1[2]))
-            except OverflowError:
-                pass
+                # self.chan_amplitude.setValue(p1[0])
+                # self.chan_t0.setValue((y_data.argmax()-1000) * self.CALIBRATE)
+                # self.chan_sigma.setValue(abs(p1[2]))
+            # except OverflowError:
+            #     pass
 
 
     @staticmethod
     def erf(x):
-        return 2 * integrate.quad(lambda t: mh.exp(-t**2), 0, x)[0] / mh.sqrt(mh.pi)
+        erf_x = np.empty_like(x, dtype=np.float64)
+        for i in range(0, x.__len__()):
+            erf_x[i] = 2 * integrate.quad(lambda t: mh.exp(-t**2), 0, x[i])[0] / mh.sqrt(mh.pi)
+        return erf_x
+
 
 def main_proc():
     import cothread
