@@ -12,6 +12,7 @@ class DialSave(QtGui.QDialog):
         self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
         self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
         self.chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
+        self.chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
 
@@ -23,8 +24,10 @@ class DialSave(QtGui.QDialog):
 
         self.cur_data = []
         self.sigma_data = []
+        self.accuracy = []
         self.counter = 0
-        self.chans = {'cxhw:0.e_diss.fit_sigma': self.sigma_data, 'cxhw:0.dcct.beamcurrent': self.cur_data}
+        self.chans = {'cxhw:0.e_diss.fit_sigma': self.sigma_data, 'cxhw:0.dcct.beamcurrent': self.cur_data,
+                      'cxhw: 0.e_diss.fit_a': self.accuracy}
 
     def push_btn_save(self):
         if self.ln_filename.text() == 'Write the name of file':
@@ -38,13 +41,15 @@ class DialSave(QtGui.QDialog):
             print self.counter
             self.chans['cxhw:0.e_diss.fit_sigma'][self.counter - 1] = self.chan_t0.val  # sigma -> t0
             self.chans['cxhw:0.dcct.beamcurrent'][self.counter - 1] = self.chan_cur.val
+            self.chans['cxhw: 0.e_diss.fit_a'][self.counter - 1] = self.chan_accuracy
             self.counter -= 1
             if self.counter:
                 pass
             else:
                 self.wr_data[0] = np.mean(self.chans['cxhw:0.dcct.beamcurrent'])
                 self.wr_data[1] = np.mean(self.chans['cxhw:0.e_diss.fit_sigma'])
-                self.wr_data[2] = np.sqrt(np.sum((self.chans['cxhw:0.e_diss.fit_sigma'] - self.wr_data[1]) ** 2))
+                self.wr_data[2] = np.sqrt(np.sum(self.chans['cxhw: 0.e_diss.fit_a'] ** 2) /
+                                          self.chans['cxhw: 0.e_diss.fit_a'].__len__())
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
                 print self.wr_data.T
                 #print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
