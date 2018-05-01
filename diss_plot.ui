@@ -52,14 +52,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="gauss_fit">
+       <widget class="QRadioButton" name="rb_gauss_fit">
         <property name="text">
          <string>Gauss Fit</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="model_fit">
+       <widget class="QRadioButton" name="rb_model_fit">
         <property name="text">
          <string>Model Fit</string>
         </property>
