@@ -5,14 +5,20 @@ import numpy as np
 import pycx4.qcda as cda
 
 class DialSave(QtGui.QDialog):
-    def __init__(self):
+    def __init__(self, chan_sigma, chan_cur, chan_t0, chan_accuracy):
         super(DialSave, self).__init__()
         uic.loadUi("save_dial.ui", self)
 
-        self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
-        self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
-        self.chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
-        self.chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
+        # self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
+        # self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+        # self.chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
+        # self.chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
+
+        self.chan_sigma = chan_sigma
+        self.chan_cur = chan_cur
+        self.chan_t0 = chan_t0
+        self.chan_accuracy = chan_accuracy
+
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
 
@@ -77,5 +83,9 @@ class DialSave(QtGui.QDialog):
 
 if __name__ == "__main__":
     app = QtGui.QApplication(['save'])
-    w = DialSave()
+    chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
+    chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+    chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
+    chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
+    w = DialSave(chan_sigma, chan_cur, chan_t0, chan_accuracy)
     sys.exit(app.exec_())

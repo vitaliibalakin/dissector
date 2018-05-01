@@ -32,7 +32,7 @@ class PlotDissectorData(QtGui.QMainWindow):
         self.btn_settings.clicked.connect(self.act_settings)
 
     def act_save(self):
-        self.dial_save = save_dial.DialSave()
+        self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy)
 
     def act_settings(self):
         self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)
@@ -56,6 +56,7 @@ class PlotDissectorData(QtGui.QMainWindow):
             self.diss_plot.plot(x_fit_data, y_fit_data, pen=pg.mkPen('r', width=5))
 
     def init_chans(self, devname):
+        # for drawing process
         self.chan_fit_data = cda.VChan(devname + ".fit_data", max_nelems=65535)
         self.chan_thinned_data = cda.VChan(devname + ".resample_data", max_nelems=65535)
         self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", max_nelems=65535)
@@ -64,9 +65,16 @@ class PlotDissectorData(QtGui.QMainWindow):
         self.chan_t0 = cda.DChan(devname + ".fit_t0")
         self.chan_sigma.valueMeasured.connect(self.plot_)
 
+        # for diss control
         self.chan_ampl = cda.DChan("cxhw:18.diss208.out1")
         self.chan_phase = cda.DChan("cxhw:18.diss208.out0")
         self.chan_light = cda.DChan("cxhw:18.diss208.outrb0")
+
+        # for data saving
+        self.chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
+        self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+        self.chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
+        self.chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
 
 
 app = QtGui.QApplication(['plot'])
