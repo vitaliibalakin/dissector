@@ -14,13 +14,10 @@ class PlotDissectorData(QtGui.QMainWindow):
         uic.loadUi("diss_plot.ui", self)
 
         self.init_chans(devname)
-        if self.chan_fit_switch.val == 'gauss':
-            self.rb_model_fit.setChecked(0)
-            self.rb_gauss_fit.setChecked(1)
-            print(1)
-        elif self.chan_fit_switch.val == 'model':
-            self.rb_gauss_fit.setChecked(0)
-            self.rb_model_fit.setChecked(1)
+
+        self.chan_fit_switch.setValue('gauss')
+        self.rb_model_fit.setChecked(0)
+        self.rb_gauss_fit.setChecked(1)
 
         self.setWindowTitle("Signal from dissector")
         self.plot_window = pg.GraphicsLayoutWidget(parent=self)
@@ -34,14 +31,38 @@ class PlotDissectorData(QtGui.QMainWindow):
         self.plot_area.setLayout(p)
         p.addWidget(self.plot_window)
 
+        # callbacks
         self.btn_save.clicked.connect(self.act_save)
         self.btn_settings.clicked.connect(self.act_settings)
+        self.btn_model_run.clicked.connect(self.model_run)
+        self.rb_gauss_fit.toggled.connect(self.switch_to_gauss)
+        self.rb_model_fit.toggled.connect(self.switch_to_model)
 
-    def act_save(self):
-        self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy)
+    def init_chans(self, devname):
+        # for drawing process
+        self.chan_fit_data = cda.VChan(devname + ".fit_data", max_nelems=65535)
+        self.chan_thinned_data = cda.VChan(devname + ".resample_data", max_nelems=65535)
+        self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", max_nelems=65535)
+        self.chan_sigma = cda.DChan(devname + ".fit_sigma", on_update=1)
+        self.chan_accuracy = cda.DChan(devname + ".fit_a")
+        self.chan_t0 = cda.DChan(devname + ".fit_t0")
 
-    def act_settings(self):
-        self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)
+        self.chan_sigma.valueChanged.connect(self.plot_)
+
+        # for diss control
+        self.chan_ampl = cda.DChan("cxhw:18.diss208.out1")
+        self.chan_phase = cda.DChan("cxhw:18.diss208.out0")
+        self.chan_light = cda.DChan("cxhw:18.diss208.outrb0")
+
+        # for data saving
+        self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
+
+        # for fit ctrl
+        self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", on_update=1, max_nelems=1024)
+        self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit", on_update=1)
+        self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", on_update=1, max_nelems=1024)
+
+        self.chan_err_mess.valueChanged.connect(self.err_mess)
 
     def plot_(self, chan):
         new_size = 2150
@@ -61,36 +82,26 @@ class PlotDissectorData(QtGui.QMainWindow):
         if not self.show_fit.isChecked():
             self.diss_plot.plot(x_fit_data, y_fit_data, pen=pg.mkPen('r', width=5))
 
+    def act_save(self):
+        self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy)
+
+    def act_settings(self):
+        self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)
+
     def err_mess(self):
         self.statusbar.showMessage(self.chan_err_mess.val)
 
-    def init_chans(self, devname):
-        # for drawing process
-        self.chan_fit_data = cda.VChan(devname + ".fit_data", max_nelems=65535)
-        self.chan_thinned_data = cda.VChan(devname + ".resample_data", max_nelems=65535)
-        self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", max_nelems=65535)
-        self.chan_sigma = cda.DChan(devname + ".fit_sigma", on_update=1)
-        self.chan_amplitude = cda.DChan(devname + ".fit_a")
-        self.chan_t0 = cda.DChan(devname + ".fit_t0")
+    def model_run(self):
+        self.chan_make_model_fit.setValue(1)
+        self.statusbar.showMessage("Model Fit pushed")
 
-        self.chan_sigma.valueChanged.connect(self.plot_)
-
-        # for diss control
-        self.chan_ampl = cda.DChan("cxhw:18.diss208.out1")
-        self.chan_phase = cda.DChan("cxhw:18.diss208.out0")
-        self.chan_light = cda.DChan("cxhw:18.diss208.outrb0")
-
-        # for data saving
-        self.chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
-
-        # for fit ctrl
-        self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", max_nelems=1024, on_update=1)
-        self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", max_nelems=1024)
-        self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit")
+    def switch_to_gauss(self):
         self.chan_fit_switch.setValue('gauss')
-        print(self.chan_fit_switch.val, "d")
+        self.statusbar.showMessage('gauss')
 
-        self.chan_err_mess.valueChanged.connect(self.err_mess)
+    def switch_to_model(self):
+        self.chan_fit_switch.setValue('model')
+        self.statusbar.showMessage('model')
 
 
 app = QtGui.QApplication(['plot'])
