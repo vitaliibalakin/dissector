@@ -20,6 +20,7 @@ class DissApp(object):
         self.number_thinned = 10
         self.delay = 18500
         self.FIT_CHOOSE = 'gauss'
+        self.FIT_RUN = 0
         self.CALIBRATE = 4.8518 / 10000 * self.number_thinned
 
         self.x_fit_data = np.arange(0, self.measured_area_size/self.number_thinned, 1, dtype=np.float64)
@@ -38,21 +39,23 @@ class DissApp(object):
         self.chan_data.valueMeasured.connect(self.data_processing)
 
         # for fit ctrl
-        self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", on_update=1, max_nelems=1024)
+        self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", max_nelems=1024)
         self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", on_update=1, max_nelems=1024)
         self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit", on_update=1)
 
-        self.chan_fit_switch.valueChanged.connect(self.fit_switch)
+        self.chan_fit_switch.valueMeasured.connect(self.fit_switch)
+        self.chan_make_model_fit.valueMeasured.connect(self.make_model_fit)
 
     def data_processing(self):
         y_thinned = self.thin_data(self.chan_data.val[self.delay:(self.delay+self.measured_area_size)])
-
-        fit_param, y_fit_data, x_fit_data = self.fit(self.x_fit_data, y_thinned)
-        self.chan_thinned_data.setValue(y_thinned)
-        self.chan_fit_data.setValue(y_fit_data)
-        self.chan_time_fit_data.setValue(x_fit_data)
-        self.chan_t0.setValue(fit_param[1])
-        self.chan_sigma.setValue(abs(fit_param[2]))
+        result = self.fit(self.x_fit_data, y_thinned)
+        if result is not None:
+            fit_param, y_fit_data, x_fit_data = result[0], result[1], result[2]
+            self.chan_thinned_data.setValue(y_thinned)
+            self.chan_fit_data.setValue(y_fit_data)
+            self.chan_time_fit_data.setValue(x_fit_data)
+            self.chan_t0.setValue(fit_param[1])
+            self.chan_sigma.setValue(abs(fit_param[2]))
 
     def thin_data(self, measured_y_data):
         sum = 0
@@ -66,7 +69,7 @@ class DissApp(object):
         return y_thinned
 
     def fit(self, x_data, y_data):
-        if y_data.max() > 30:
+        if y_data.max() > 40:
             if self.FIT_CHOOSE == 'gauss':
                 gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
                 errfunc = lambda p, x, y: gaussfit(p, x) - y_data
@@ -79,13 +82,13 @@ class DissApp(object):
                 #     errfit.append(np.absolute(pcov[i][i]**0.5 * s_sq))
                 return p1, gaussfit(p1, x_data), x_data
             elif self.FIT_CHOOSE == 'model':
-                if self.chan_make_model_fit.val:
+                if self.FIT_RUN:
                     try:
                         modelfit = lambda p, x: p[3] + (mh.sqrt(2/mh.pi)/p[0]) * p[4] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) / \
-                                                       (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - self.erf((x - p[1]) / mh.sqrt(2) * p[2]))
+                                                       (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - self.erf((x - p[1]) / mh.sqrt(2) / p[2]))
 
                         errfunc = lambda p, x, y: modelfit(p, x) - y_data
-                        p = [-4, (y_data.argmax()-1075) * self.CALIBRATE, 0.6, 0, 4 * y_data.max()]
+                        p = [-3, (y_data.argmax()-1075) * self.CALIBRATE, 0.6, 0, 4 * y_data.max()]
 
                         p1, pcov, infodict, errmsg, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data),
                                                                                full_output=1, epsfcn=0.0001)
@@ -94,24 +97,26 @@ class DissApp(object):
                         # errfit = []
                         # for i in range(p1.__len__()):
                         #     errfit.append(np.absolute(pcov[i][i] ** 0.5 * s_sq))
+                        self.FIT_RUN = 0
                         self.chan_make_model_fit.setValue(0)
-                        self.chan_err_mess.setValue("Model fit applied")
+                        # x1 = integrate.trapz(x_data * modelfit(p1, x_data), x_data)
+                        # x2 = integrate.trapz(modelfit(p1, x_data), x_data)
+                        # x3 = x1 / x2
+                        # print("result center")
+                        self.chan_err_mess.setValue("Model fit was applied")
                         return p1, modelfit(p1, x_data), x_data
 
                     except OverflowError:
-                        self.chan_make_model_fit.setValue(0)
-                        self.chan_err_mess.setValue("OverFlow Error")
+                        self.FIT_RUN = 0
+                        self.chan_err_mess.setValue("OverFlow Error. Make fit again")
                 else:
-                    self.chan_err_mess.setValue("No make fit command")
-                    return (0, 0, 0), y_data, x_data
+                    pass
             else:
-                self.chan_make_model_fit.setValue(0)
+                self.FIT_RUN = 0
                 self.chan_err_mess.setValue("Curr")
-                return (0, 0, 0), y_data, x_data
         else:
-            self.chan_make_model_fit.setValue(0)
-            self.chan_err_mess.setValue("Low signal")
-            return (0, 0, 0), y_data, x_data
+            self.FIT_RUN = 0
+            #self.chan_err_mess.setValue("Low signal")
 
     @staticmethod
     def erf(x):
@@ -122,6 +127,10 @@ class DissApp(object):
 
     def fit_switch(self):
         self.FIT_CHOOSE = self.chan_fit_switch.val
+
+    def make_model_fit(self):
+        if self.chan_make_model_fit.val:
+            self.FIT_RUN = self.chan_make_model_fit.val
 
 
 def main_proc():

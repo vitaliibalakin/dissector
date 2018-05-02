@@ -40,12 +40,12 @@ class PlotDissectorData(QtGui.QMainWindow):
 
     def init_chans(self, devname):
         # for drawing process
-        self.chan_fit_data = cda.VChan(devname + ".fit_data", max_nelems=65535)
-        self.chan_thinned_data = cda.VChan(devname + ".resample_data", max_nelems=65535)
-        self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", max_nelems=65535)
+        self.chan_fit_data = cda.VChan(devname + ".fit_data", on_update=1, max_nelems=65535)
+        self.chan_thinned_data = cda.VChan(devname + ".resample_data", on_update=1, max_nelems=65535)
+        self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", on_update=1, max_nelems=65535)
         self.chan_sigma = cda.DChan(devname + ".fit_sigma", on_update=1)
-        self.chan_accuracy = cda.DChan(devname + ".fit_a")
-        self.chan_t0 = cda.DChan(devname + ".fit_t0")
+        self.chan_accuracy = cda.DChan(devname + ".fit_a", on_update=1)
+        self.chan_t0 = cda.DChan(devname + ".fit_t0", on_update=1)
 
         self.chan_sigma.valueChanged.connect(self.plot_)
 
@@ -59,10 +59,10 @@ class PlotDissectorData(QtGui.QMainWindow):
 
         # for fit ctrl
         self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", on_update=1, max_nelems=1024)
-        self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit", on_update=1)
-        self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", on_update=1, max_nelems=1024)
+        self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit")
+        self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", max_nelems=1024)
 
-        self.chan_err_mess.valueChanged.connect(self.err_mess)
+        self.chan_err_mess.valueMeasured.connect(self.err_mess)
 
     def plot_(self, chan):
         new_size = 2150
@@ -81,6 +81,7 @@ class PlotDissectorData(QtGui.QMainWindow):
 
         if not self.show_fit.isChecked():
             self.diss_plot.plot(x_fit_data, y_fit_data, pen=pg.mkPen('r', width=5))
+        #print(self.chan_cur.val, self.chan_t0.val, self.chan_sigma.val)
 
     def act_save(self):
         self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy)
