@@ -66,7 +66,7 @@ class PlotDissectorData(QtGui.QMainWindow):
 
     def plot_(self, chan):
         new_size = 2150
-        x_fit_data = self.chan_time_fit_data.val[0:new_size]
+        x_fit_data = self.chan_fit_data.val[0:new_size]
         y_fit_data = self.chan_fit_data.val[0:new_size]
         y_data = self.chan_thinned_data.val[0:new_size]
         #x_data = np.arange(0, new_size, 1, dtype=np.float64)
@@ -84,7 +84,8 @@ class PlotDissectorData(QtGui.QMainWindow):
         #print(self.chan_cur.val, self.chan_t0.val, self.chan_sigma.val)
 
     def act_save(self):
-        self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy)
+        self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy,
+                                            self.chan_make_model_fit, self.chan_fit_data, self.chan_fit_data)
 
     def act_settings(self):
         self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)

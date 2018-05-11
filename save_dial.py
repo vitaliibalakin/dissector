@@ -3,9 +3,11 @@ import sys
 import datetime
 import numpy as np
 import pycx4.qcda as cda
+import json
 
 class DialSave(QtGui.QDialog):
-    def __init__(self, chan_sigma, chan_cur, chan_t0, chan_accuracy):
+    def __init__(self, chan_sigma, chan_cur, chan_t0, chan_accuracy, chan_make_model_fit, chan_fit_data,
+                 chan_time_fit_data):
         super(DialSave, self).__init__()
         uic.loadUi("save_dial.ui", self)
 
@@ -18,6 +20,9 @@ class DialSave(QtGui.QDialog):
         self.chan_cur = chan_cur
         self.chan_t0 = chan_t0
         self.chan_accuracy = chan_accuracy
+        self.chan_make_model_fit = chan_make_model_fit
+        self.chan_fit_data = chan_fit_data
+        self.chan_time_fit_data = chan_time_fit_data
 
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
@@ -32,8 +37,7 @@ class DialSave(QtGui.QDialog):
         self.sigma_data = []
         self.accuracy = []
         self.counter = 0
-        self.chans = {'cxhw:0.e_diss.fit_sigma': self.sigma_data, 'cxhw:0.dcct.beamcurrent': self.cur_data,
-                      'cxhw: 0.e_diss.fit_a': self.accuracy}
+        self.chans = {}
 
     def push_btn_save(self):
         if self.ln_filename.text() == 'Write the name of file':
@@ -45,21 +49,23 @@ class DialSave(QtGui.QDialog):
     def new_val_cb(self):
         if self.counter != 0:
             print self.counter
-            self.chans['cxhw:0.e_diss.fit_sigma'][self.counter - 1] = self.chan_t0.val  # sigma -> t0
-            self.chans['cxhw:0.dcct.beamcurrent'][self.counter - 1] = self.chan_cur.val
-            self.chans['cxhw: 0.e_diss.fit_a'][self.counter - 1] = self.chan_accuracy
+            self.chans['sigma'][self.counter - 1] = self.chan_sigma.val
+            self.chans['beam_current'][self.counter - 1] = self.chan_cur.val
+            self.chans['t_0'][self.counter - 1] = self.chan_t0
             self.counter -= 1
+            self.chan_make_model_fit.setValue(1)
             if self.counter:
                 pass
             else:
-                self.wr_data[0] = np.mean(self.chans['cxhw:0.dcct.beamcurrent'])
-                self.wr_data[1] = np.mean(self.chans['cxhw:0.e_diss.fit_sigma'])
-                self.wr_data[2] = np.sqrt(np.sum(self.chans['cxhw: 0.e_diss.fit_a'] ** 2) /
-                                          self.chans['cxhw: 0.e_diss.fit_a'].__len__())
+                self.wr_data[0] = np.mean(self.chans['beam_current'])
+                self.wr_data[1] = np.mean(self.chans['sigma'])
+                self.wr_data[2] = np.mean(self.chans['t_0'])
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
+                if self.av_num == 1:
+                    osc_data = [self.chans['beam_current'], self.chan_time_fit_data, self.chan_fit_data]
+                    self.f_osc.write(json.dump(osc_data))
+                    self.f_osc.write('\n')
                 print self.wr_data.T
-                #print(self.chans['cxhw:0.e_diss.fit_sigma'], self.wr_data[1], self.wr_data[2])
-                #print(self.chans['cxhw:0.dcct.beamcurrent'])
                 self.lbl_status.setText("The value was saved")
         else:
             pass
@@ -70,14 +76,19 @@ class DialSave(QtGui.QDialog):
             self.f = open(self.ln_filename.text() + '_' + date + '.dat', 'w')
             self.av_num = self.box_av_num.value()
             self.wr_data = np.zeros((3, 1), dtype=np.double)
-            self.chans['cxhw:0.e_diss.fit_sigma'] = np.zeros((self.av_num,), dtype=np.double)
-            self.chans['cxhw:0.dcct.beamcurrent'] = np.zeros((self.av_num,), dtype=np.double)
+            self.chans['sigma'] = np.zeros((self.av_num,), dtype=np.double)
+            self.chans['beam_current'] = np.zeros((self.av_num,), dtype=np.double)
+            self.chans['t_0'] = np.zeros((self.av_num,), dtype=np.double)
+            if self.av_num == 1:
+                self.f_osc = open('osc' + self.ln_filename.text() + '_' + date + '.dat', 'w')
             self.lbl_status.setText('Meas began')
         else:
             self.lbl_status.setText('Write the filename')
 
     def finish_meas(self):
         self.f.close()
+        if self.av_num == 1:
+            self.f_osc.close()
         self.lbl_status.setText('Meas finished')
 
 
