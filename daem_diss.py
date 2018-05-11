@@ -50,12 +50,12 @@ class DissApp(object):
         y_thinned = self.thin_data(self.chan_data.val[self.delay:(self.delay+self.measured_area_size)])
         result = self.fit(self.x_fit_data, y_thinned)
         if result is not None:
-            fit_param, y_fit_data, x_fit_data = result[0], result[1], result[2]
+            fit_param, y_fit_data, x_fit_data, b_pos, b_size = result[0], result[1], result[2], result[3], result[4]
             self.chan_thinned_data.setValue(y_thinned)
             self.chan_fit_data.setValue(y_fit_data)
             self.chan_time_fit_data.setValue(x_fit_data)
-            self.chan_t0.setValue(fit_param[1])
-            self.chan_sigma.setValue(abs(fit_param[2]))
+            self.chan_t0.setValue(b_pos)
+            self.chan_sigma.setValue(b_size)
 
     def thin_data(self, measured_y_data):
         sum = 0
