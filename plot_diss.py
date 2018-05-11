@@ -85,7 +85,8 @@ class PlotDissectorData(QtGui.QMainWindow):
 
     def act_save(self):
         self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy,
-                                            self.chan_make_model_fit, self.chan_fit_data, self.chan_fit_data)
+                                            self.chan_make_model_fit, self.chan_fit_data,
+                                            self.chan_time_fit_data_fit_data)
 
     def act_settings(self):
         self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)

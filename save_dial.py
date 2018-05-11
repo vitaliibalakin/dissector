@@ -62,8 +62,8 @@ class DialSave(QtGui.QDialog):
                 self.wr_data[2] = np.mean(self.chans['t_0'])
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
                 if self.av_num == 1:
-                    osc_data = [self.chans['beam_current'], self.chan_time_fit_data, self.chan_fit_data]
-                    self.f_osc.write(json.dump(osc_data))
+                    self.f_osc.write(json.dump([self.chans['beam_current'], self.chan_time_fit_data,
+                                                self.chan_fit_data]))
                     self.f_osc.write('\n')
                 print self.wr_data.T
                 self.lbl_status.setText("The value was saved")
@@ -80,7 +80,7 @@ class DialSave(QtGui.QDialog):
             self.chans['beam_current'] = np.zeros((self.av_num,), dtype=np.double)
             self.chans['t_0'] = np.zeros((self.av_num,), dtype=np.double)
             if self.av_num == 1:
-                self.f_osc = open('osc' + self.ln_filename.text() + '_' + date + '.dat', 'w')
+                self.f_osc = open('osc' + '_' + self.ln_filename.text() + '_' + date + '.dat', 'w')
             self.lbl_status.setText('Meas began')
         else:
             self.lbl_status.setText('Write the filename')
@@ -98,5 +98,8 @@ if __name__ == "__main__":
     chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
     chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")
     chan_accuracy = cda.DChan("cxhw:0.e_diss.fit_a")
-    w = DialSave(chan_sigma, chan_cur, chan_t0, chan_accuracy)
+    chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit")
+    chan_fit_data = cda.VChan('cxhw:0.e_diss' + ".fit_data", on_update=1, max_nelems=65535)
+    chan_time_fit_data = cda.VChan('cxhw:0.e_diss' + ".time_fit_data", on_update=1, max_nelems=65535)
+    w = DialSave(chan_sigma, chan_cur, chan_t0, chan_accuracy, chan_make_model_fit, chan_fit_data, chan_time_fit_data)
     sys.exit(app.exec_())
