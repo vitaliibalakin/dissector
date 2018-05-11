@@ -80,7 +80,9 @@ class DissApp(object):
                 # errfit = []
                 # for i in range(p1.__len__()):
                 #     errfit.append(np.absolute(pcov[i][i]**0.5 * s_sq))
-                return p1, gaussfit(p1, x_data), x_data
+                x_av = self.x_average(x_data, gaussfit(p1, x_data))
+                beam_fwhm = self.beam_size(x_data, gaussfit(p1, x_data))
+                return p1, gaussfit(p1, x_data), x_data, x_av, beam_fwhm
             elif self.FIT_CHOOSE == 'model':
                 if self.FIT_RUN:
                     try:
@@ -99,12 +101,10 @@ class DissApp(object):
                         #     errfit.append(np.absolute(pcov[i][i] ** 0.5 * s_sq))
                         self.FIT_RUN = 0
                         self.chan_make_model_fit.setValue(0)
-                        # x1 = integrate.trapz(x_data * modelfit(p1, x_data), x_data)
-                        # x2 = integrate.trapz(modelfit(p1, x_data), x_data)
-                        # x3 = x1 / x2
-                        # print("result center")
+                        x_av = self.x_average(x_data, modelfit(p1, x_data))
+                        beam_fwhm = self.beam_size(x_data, modelfit(p1, x_data))
                         self.chan_err_mess.setValue("Model fit was applied")
-                        return p1, modelfit(p1, x_data), x_data
+                        return p1, modelfit(p1, x_data), x_data, x_av, beam_fwhm
 
                     except OverflowError:
                         self.FIT_RUN = 0
@@ -124,6 +124,20 @@ class DissApp(object):
         for i in range(0, x.__len__()):
             erf_x[i] = 2 * integrate.quad(lambda t: mh.exp(-t**2), 0, x[i])[0] / mh.sqrt(mh.pi)
         return erf_x
+
+    @staticmethod
+    def x_average(x, y):
+        x_y_av = integrate.trapz(x * y, x)
+        y_av = integrate.trapz(y, x)
+        x_av = x_y_av / y_av
+        return x_av
+
+    @staticmethod
+    def beam_size(x, y):
+        half_am = np.max(y) / 2
+        x_half = np.where(y > half_am)
+        beam_fwhm = x[x_half[0][-1] - x_half[0][0]]
+        return beam_fwhm
 
     def fit_switch(self):
         self.FIT_CHOOSE = self.chan_fit_switch.val
