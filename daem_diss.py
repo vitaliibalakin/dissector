@@ -18,7 +18,7 @@ class DissApp(object):
 
         self.measured_area_size = 21500
         self.number_thinned = 10
-        self.delay = 18500
+        self.delay = 20500
         self.FIT_CHOOSE = 'gauss'
         self.FIT_RUN = 0
         self.CALIBRATE = 4.8518 / 10000 * self.number_thinned
@@ -116,27 +116,25 @@ class DissApp(object):
                 self.chan_err_mess.setValue("Curr")
         else:
             self.FIT_RUN = 0
-            #self.chan_err_mess.setValue("Low signal")
+            # self.chan_err_mess.setValue("Low signal")
 
     @staticmethod
     def erf(x):
         erf_x = np.empty_like(x, dtype=np.float64)
-        for i in range(0, x.__len__()):
+        for i in range(0, len(x)):
             erf_x[i] = 2 * integrate.quad(lambda t: mh.exp(-t**2), 0, x[i])[0] / mh.sqrt(mh.pi)
         return erf_x
 
     @staticmethod
     def x_average(x, y):
-        x_y_av = integrate.trapz(x * y, x)
-        y_av = integrate.trapz(y, x)
-        x_av = x_y_av / y_av
-        return x_av
+        return integrate.trapz(x * y, x) / integrate.trapz(y, x)
 
     @staticmethod
     def beam_size(x, y):
         half_am = np.max(y) / 2
         x_half = np.where(y > half_am)
-        beam_fwhm = x[x_half[0][-1] - x_half[0][0]]
+        beam_fwhm = x[x_half[0][-1]] - x[x_half[0][0]]
+        print(beam_fwhm)
         return beam_fwhm
 
     def fit_switch(self):

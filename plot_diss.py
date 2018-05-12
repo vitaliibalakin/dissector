@@ -66,27 +66,22 @@ class PlotDissectorData(QtGui.QMainWindow):
 
     def plot_(self, chan):
         new_size = 2150
-        x_fit_data = self.chan_fit_data.val[0:new_size]
+        x_fit_data = self.chan_time_fit_data.val[0:new_size]
         y_fit_data = self.chan_fit_data.val[0:new_size]
         y_data = self.chan_thinned_data.val[0:new_size]
-        #x_data = np.arange(0, new_size, 1, dtype=np.float64)
 
         self.sigma.setText(str(round(self.chan_sigma.val, 3)))
-        #self.peak.setText(str(round(self.chan_t0.val, 3)))
         self.ampl.setText(str(round(self.chan_t0.val, 3)))
-        #print(self.chan_sigma.val, self.chan_t0.val, self.chan_amplitude.val)
 
         self.diss_plot.clear()
         self.diss_plot.plot(x_fit_data, y_data, pen=None, symbol='o')
-
         if not self.show_fit.isChecked():
             self.diss_plot.plot(x_fit_data, y_fit_data, pen=pg.mkPen('r', width=5))
-        #print(self.chan_cur.val, self.chan_t0.val, self.chan_sigma.val)
 
     def act_save(self):
         self.dial_save = save_dial.DialSave(self.chan_sigma, self.chan_cur, self.chan_t0, self.chan_accuracy,
                                             self.chan_make_model_fit, self.chan_fit_data,
-                                            self.chan_time_fit_data_fit_data)
+                                            self.chan_time_fit_data)
 
     def act_settings(self):
         self.dial_set = settings_dial.DialSet(self.chan_light, self.chan_phase, self.chan_ampl)
