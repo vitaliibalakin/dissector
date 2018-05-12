@@ -45,13 +45,14 @@ class DialSave(QtGui.QDialog):
         else:
             self.lbl_status.setText("Saving")
             self.counter = self.av_num
+            self.chan_make_model_fit.setValue(1)
 
     def new_val_cb(self):
         if self.counter != 0:
             print self.counter
             self.chans['sigma'][self.counter - 1] = self.chan_sigma.val
             self.chans['beam_current'][self.counter - 1] = self.chan_cur.val
-            self.chans['t_0'][self.counter - 1] = self.chan_t0
+            self.chans['t_0'][self.counter - 1] = self.chan_t0.val
             self.counter -= 1
             self.chan_make_model_fit.setValue(1)
             if self.counter:
@@ -62,8 +63,10 @@ class DialSave(QtGui.QDialog):
                 self.wr_data[2] = np.mean(self.chans['t_0'])
                 np.savetxt(self.f, self.wr_data.T, delimiter=' ', newline='\n')
                 if self.av_num == 1:
-                    self.f_osc.write(json.dump([self.chans['beam_current'], self.chan_time_fit_data,
-                                                self.chan_fit_data]))
+                    x_data = self.chan_time_fit_data.val.tolist()
+                    y_data = self.chan_fit_data.val.tolist()
+                    osc_data = {'current': self.chans['beam_current'][0], 'x_data': x_data, 'y_data': y_data}
+                    self.f_osc.write(json.dumps(osc_data))
                     self.f_osc.write('\n')
                 print self.wr_data.T
                 self.lbl_status.setText("The value was saved")
@@ -80,7 +83,7 @@ class DialSave(QtGui.QDialog):
             self.chans['beam_current'] = np.zeros((self.av_num,), dtype=np.double)
             self.chans['t_0'] = np.zeros((self.av_num,), dtype=np.double)
             if self.av_num == 1:
-                self.f_osc = open('osc' + '_' + self.ln_filename.text() + '_' + date + '.dat', 'w')
+                self.f_osc = open(self.ln_filename.text() + '_' + 'osc' + '_' + date + '.dat', 'w')
             self.lbl_status.setText('Meas began')
         else:
             self.lbl_status.setText('Write the filename')

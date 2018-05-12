@@ -1,5 +1,8 @@
-import pycx4.qcda as cda
+import numpy as np
+import json
 
-chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", max_nelems=1024)
-chan_fit_switch.setValue('gauss')
-print(chan_fit_switch.val, 'd')
+a = np.array([1, 2, 3])
+c = a.tolist()
+b = json.dumps(c)
+print(b, a)
+

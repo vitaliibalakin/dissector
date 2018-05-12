@@ -18,7 +18,7 @@ class DissApp(object):
 
         self.measured_area_size = 21500
         self.number_thinned = 10
-        self.delay = 20500
+        self.delay = 19500
         self.FIT_CHOOSE = 'gauss'
         self.FIT_RUN = 0
         self.CALIBRATE = 4.8518 / 10000 * self.number_thinned
@@ -56,6 +56,7 @@ class DissApp(object):
             self.chan_time_fit_data.setValue(x_fit_data)
             self.chan_t0.setValue(b_pos)
             self.chan_sigma.setValue(b_size)
+            # print(b_pos, fit_param[1], x_fit_data[np.argmax(y_fit_data)])
 
     def thin_data(self, measured_y_data):
         sum = 0
@@ -134,7 +135,6 @@ class DissApp(object):
         half_am = np.max(y) / 2
         x_half = np.where(y > half_am)
         beam_fwhm = x[x_half[0][-1]] - x[x_half[0][0]]
-        print(beam_fwhm)
         return beam_fwhm
 
     def fit_switch(self):
