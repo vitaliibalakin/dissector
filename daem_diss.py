@@ -81,8 +81,8 @@ class DissApp(object):
                 # errfit = []
                 # for i in range(p1.__len__()):
                 #     errfit.append(np.absolute(pcov[i][i]**0.5 * s_sq))
-                x_av = self.x_average(x_data, gaussfit(p1, x_data))
-                beam_fwhm = self.beam_size(x_data, gaussfit(p1, x_data))
+                x_av = self.x_average(x_data, (gaussfit(p1, x_data) - p[3]))
+                beam_fwhm = self.beam_size(x_data, (gaussfit(p1, x_data) - p[3]))
                 return p1, gaussfit(p1, x_data), x_data, x_av, beam_fwhm
             elif self.FIT_CHOOSE == 'model':
                 if self.FIT_RUN:
@@ -102,8 +102,8 @@ class DissApp(object):
                         #     errfit.append(np.absolute(pcov[i][i] ** 0.5 * s_sq))
                         self.FIT_RUN = 0
                         self.chan_make_model_fit.setValue(0)
-                        x_av = self.x_average(x_data, modelfit(p1, x_data))
-                        beam_fwhm = self.beam_size(x_data, modelfit(p1, x_data))
+                        x_av = self.x_average(x_data, (modelfit(p1, x_data) - p[3]))
+                        beam_fwhm = self.beam_size(x_data, (modelfit(p1, x_data) - p[3]))
                         self.chan_err_mess.setValue("Model fit was applied")
                         return p1, modelfit(p1, x_data), x_data, x_av, beam_fwhm
 
