@@ -16,9 +16,9 @@ class DissApp(object):
 
         self.init_chans(adcname, devname)
 
-        self.measured_area_size = 21500
+        self.measured_area_size = 10000
         self.number_thinned = 10
-        self.delay = 19500
+        self.delay = 23500
         self.FIT_CHOOSE = 'gauss'
         self.FIT_RUN = 0
         self.CALIBRATE = 4.8518 / 10000 * self.number_thinned
@@ -74,13 +74,13 @@ class DissApp(object):
             if self.FIT_CHOOSE == 'gauss':
                 gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
                 errfunc = lambda p, x, y: gaussfit(p, x) - y_data
-                p = [0.07, (y_data.argmax()-1075) * self.CALIBRATE, 0.6, 0]
+                p = [0.07, (y_data.argmax()-505) * self.CALIBRATE, 0.6, 0]
                 p1, pcov, infodict, errmsg, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data),
                                                                        full_output=1, epsfcn=0.0001)
                 # s_sq = (errfunc(p1, x_data, y_data)**2).sum()/(y_data.__len__() - p.__len__())
                 # errfit = []
                 # for i in range(p1.__len__()):
-                #     errfit.append(np.absolute(pcov[i][i]**0.5 * s_sq))
+                #     errfit.append(np.absolute((pcov[i][i] * s_sq) ** 0.5))
                 x_av = self.x_average(x_data, (gaussfit(p1, x_data) - p[3]))
                 beam_fwhm = self.beam_size(x_data, (gaussfit(p1, x_data) - p[3]))
                 return p1, gaussfit(p1, x_data), x_data, x_av, beam_fwhm
@@ -91,7 +91,7 @@ class DissApp(object):
                                                        (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - self.erf((x - p[1]) / mh.sqrt(2) / p[2]))
 
                         errfunc = lambda p, x, y: modelfit(p, x) - y_data
-                        p = [-3, (y_data.argmax()-1075) * self.CALIBRATE, 0.6, 0, 4 * y_data.max()]
+                        p = [-3, (y_data.argmax()-505) * self.CALIBRATE, 0.6, 0, 4 * y_data.max()]
 
                         p1, pcov, infodict, errmsg, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data),
                                                                                full_output=1, epsfcn=0.0001)
@@ -99,10 +99,13 @@ class DissApp(object):
                         # s_sq = (errfunc(p1, x_data, y_data) ** 2).sum() / (y_data.__len__() - p.__len__())
                         # errfit = []
                         # for i in range(p1.__len__()):
-                        #     errfit.append(np.absolute(pcov[i][i] ** 0.5 * s_sq))
+                        #     errfit.append(np.absolute((pcov[i][i] * s_sq) ** 0.5))
                         self.FIT_RUN = 0
                         self.chan_make_model_fit.setValue(0)
                         x_av = self.x_average(x_data, (modelfit(p1, x_data) - p[3]))
+                        # x_av_err = self.x_average_error(x_data, (modelfit(p1, x_data) - p[3]),
+                        #                                 errfunc(p1, x_data, y_data), x_av)
+
                         beam_fwhm = self.beam_size(x_data, (modelfit(p1, x_data) - p[3]))
                         self.chan_err_mess.setValue("Model fit was applied")
                         return p1, modelfit(p1, x_data), x_data, x_av, beam_fwhm
@@ -136,6 +139,10 @@ class DissApp(object):
         x_half = np.where(y > half_am)
         beam_fwhm = x[x_half[0][-1]] - x[x_half[0][0]]
         return beam_fwhm
+
+    @staticmethod
+    def x_average_error(x, y, dy, x_av):
+        return integrate.trapz(x * (dy + y), x) / integrate.trapz(y+dy, x) - x_av
 
     def fit_switch(self):
         self.FIT_CHOOSE = self.chan_fit_switch.val
