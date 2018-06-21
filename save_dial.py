@@ -91,15 +91,6 @@ class DialSave(QtGui.QDialog):
         else:
             pass
 
-    def begin_meas(self):
-        if self.ln_filename.text() != 'Write the name of file':
-
-            if self.av_num == 1:
-                self.f_osc = open(self.ln_filename.text() + '_' + 'osc' + '_' + date + '.dat', 'w')
-            self.lbl_status.setText('Meas began')
-        else:
-            self.lbl_status.setText('Write the filename')
-
 
 if __name__ == "__main__":
     app = QtGui.QApplication(['save'])
