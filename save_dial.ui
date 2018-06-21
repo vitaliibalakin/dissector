@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>502</width>
-    <height>153</height>
+    <width>274</width>
+    <height>147</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,33 +18,12 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>501</width>
+     <width>271</width>
      <height>140</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="1" column="1">
-     <widget class="QPushButton" name="btn_finish_meas">
-      <property name="text">
-       <string>Finish measurements</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Set filename</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QPushButton" name="btn_begin_meas">
-      <property name="text">
-       <string>Begin measurements</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
      <widget class="QSpinBox" name="box_av_num">
       <property name="minimum">
        <number>1</number>
@@ -57,31 +36,38 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="ln_filename">
+    <item row="2" column="1">
+     <widget class="QPushButton" name="btn_save">
       <property name="text">
-       <string>Write the name of file</string>
+       <string>Save a value</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="1" column="0">
      <widget class="QLabel" name="label">
       <property name="text">
        <string>Av. number</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QPushButton" name="btn_save">
-      <property name="text">
-       <string>Click to save a value</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
+    <item row="2" column="0">
      <widget class="QLabel" name="lbl_status">
       <property name="text">
        <string>Status</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Set filename</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLineEdit" name="ln_filename">
+      <property name="text">
+       <string>Name of file</string>
       </property>
      </widget>
     </item>
