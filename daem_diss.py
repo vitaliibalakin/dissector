@@ -1,13 +1,14 @@
 #!/usr/bin/python
-#try
 
-from PyQt4 import QtGui, QtCore, uic
-from scipy import optimize
+from PyQt4 import QtCore
+from scipy import optimize, integrate
 import sys
 import numpy as np
+import math as mh
 from acc_ctl.service_daemon import Service
 
 import pycx4.qcda as cda
+
 
 class DissApp(object):
     def __init__(self, adcname, devname):
@@ -15,13 +16,16 @@ class DissApp(object):
 
         self.init_chans(adcname, devname)
 
-        self.measured_area_size = 20000
+        self.measured_area_size = 10000
         self.number_thinned = 10
-        self.delay = 17000
+        self.delay = 23500
+        self.FIT_CHOOSE = 'gauss'
+        self.FIT_RUN = 0
+        self.CALIBRATE = 4.8518 / 10000 * self.number_thinned
 
-        self.CALIBRATE = 5.45 / 10000 * self.number_thinned * 1
-
-        self.chan_data.valueMeasured.connect(self.data_processing)
+        self.x_fit_data = np.arange(0, self.measured_area_size/self.number_thinned, 1, dtype=np.float64)
+        self.x_fit_data -= self.x_fit_data[int(self.measured_area_size/self.number_thinned/2)]
+        self.x_fit_data *= self.CALIBRATE
 
     def init_chans(self, adcname, devname):
         self.chan_data = cda.VChan(adcname, max_nelems=65535)
@@ -32,11 +36,27 @@ class DissApp(object):
         self.chan_t0 = cda.DChan(devname + ".fit_t0")
         self.chan_time_fit_data = cda.VChan(devname + ".time_fit_data", max_nelems=65535)
 
-    def data_processing(self):
-        y_fit_data = self.thin_data(self.chan_data.val[self.delay:(self.delay+self.measured_area_size)])
-        x_fit_data = np.arange(0, y_fit_data.__len__(), 1, dtype=np.float64)
+        self.chan_data.valueMeasured.connect(self.data_processing)
 
-        self.fit(x_fit_data, y_fit_data)
+        # for fit ctrl
+        self.chan_err_mess = cda.StrChan("cxhw:2.e_diss" + ".err_mess", max_nelems=1024)
+        self.chan_fit_switch = cda.StrChan("cxhw:2.e_diss" + ".fit_switch", on_update=1, max_nelems=1024)
+        self.chan_make_model_fit = cda.DChan("cxhw:2.e_diss" + ".make_model_fit", on_update=1)
+
+        self.chan_fit_switch.valueMeasured.connect(self.fit_switch)
+        self.chan_make_model_fit.valueMeasured.connect(self.make_model_fit)
+
+    def data_processing(self):
+        y_thinned = self.thin_data(self.chan_data.val[self.delay:(self.delay+self.measured_area_size)])
+        result = self.fit(self.x_fit_data, y_thinned)
+        if result is not None:
+            fit_param, y_fit_data, x_fit_data, b_pos, b_size = result[0], result[1], result[2], result[3], result[4]
+            self.chan_thinned_data.setValue(y_thinned)
+            self.chan_fit_data.setValue(y_fit_data)
+            self.chan_time_fit_data.setValue(x_fit_data)
+            self.chan_t0.setValue(b_pos)
+            self.chan_sigma.setValue(b_size)
+            # print(b_pos, fit_param[1], x_fit_data[np.argmax(y_fit_data)])
 
     def thin_data(self, measured_y_data):
         sum = 0
@@ -45,27 +65,91 @@ class DissApp(object):
         for j in range(0, new_size):
             for i in range(self.number_thinned * (j - 1), self.number_thinned * j):
                 sum += measured_y_data[i]
-            y_thinned[j] = sum / self.number_thinned * 1000  #V->mV
+            y_thinned[j] = sum / self.number_thinned * 1000  # V ---> mV
             sum = 0
-        self.chan_thinned_data.setValue(y_thinned)
         return y_thinned
 
     def fit(self, x_data, y_data):
-        if y_data.max() > 30:
-            gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
-            errfunc = lambda p, x, y: gaussfit(p, x) - y_data
-            p = [0.07, y_data.argmax(), 100, 0]
-            p1, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data))
+        if y_data.max() > 40:
+            if self.FIT_CHOOSE == 'gauss':
+                gaussfit = lambda p, x: p[0] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) + p[3]
+                errfunc = lambda p, x, y: gaussfit(p, x) - y_data
+                p = [0.07, (y_data.argmax()-505) * self.CALIBRATE, 0.6, 0]
+                p1, pcov, infodict, errmsg, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data),
+                                                                       full_output=1, epsfcn=0.0001)
+                # s_sq = (errfunc(p1, x_data, y_data)**2).sum()/(y_data.__len__() - p.__len__())
+                # errfit = []
+                # for i in range(p1.__len__()):
+                #     errfit.append(np.absolute((pcov[i][i] * s_sq) ** 0.5))
+                x_av = self.x_average(x_data, (gaussfit(p1, x_data) - p[3]))
+                beam_fwhm = self.beam_size(x_data, (gaussfit(p1, x_data) - p[3]))
+                return p1, gaussfit(p1, x_data), x_data, x_av, beam_fwhm
+            elif self.FIT_CHOOSE == 'model':
+                if self.FIT_RUN:
+                    try:
+                        modelfit = lambda p, x: p[3] + (mh.sqrt(2/mh.pi)/p[0]) * p[4] * np.exp(-(((x - p[1]) / p[2]) ** 2) / 2) / \
+                                                       (mh.cosh(p[0]/2)/mh.sinh(p[0]/2) - self.erf((x - p[1]) / mh.sqrt(2) / p[2]))
 
-            self.chan_fit_data.setValue(gaussfit(p1, x_data))
-            self.chan_time_fit_data.setValue(x_data * self.CALIBRATE)
+                        errfunc = lambda p, x, y: modelfit(p, x) - y_data
+                        p = [-3, (y_data.argmax()-505) * self.CALIBRATE, 0.6, 0, 4 * y_data.max()]
 
-            p1[1] *= self.CALIBRATE
-            p1[2] *= self.CALIBRATE
-            print p1[2], p1[1], y_data.argmax() * self.CALIBRATE, p1[0], y_data.max()
-            self.chan_amplitude.setValue(p1[0])
-            self.chan_t0.setValue(p1[1])
-            self.chan_sigma.setValue(abs(p1[2]))
+                        p1, pcov, infodict, errmsg, success = optimize.leastsq(errfunc, p[:], args=(x_data, y_data),
+                                                                               full_output=1, epsfcn=0.0001)
+
+                        # s_sq = (errfunc(p1, x_data, y_data) ** 2).sum() / (y_data.__len__() - p.__len__())
+                        # errfit = []
+                        # for i in range(p1.__len__()):
+                        #     errfit.append(np.absolute((pcov[i][i] * s_sq) ** 0.5))
+                        self.FIT_RUN = 0
+                        self.chan_make_model_fit.setValue(0)
+                        x_av = self.x_average(x_data, (modelfit(p1, x_data) - p[3]))
+                        # x_av_err = self.x_average_error(x_data, (modelfit(p1, x_data) - p[3]),
+                        #                                 errfunc(p1, x_data, y_data), x_av)
+
+                        beam_fwhm = self.beam_size(x_data, (modelfit(p1, x_data) - p[3]))
+                        self.chan_err_mess.setValue("Model fit was applied")
+                        return p1, modelfit(p1, x_data), x_data, x_av, beam_fwhm
+
+                    except OverflowError:
+                        self.FIT_RUN = 0
+                        self.chan_err_mess.setValue("OverFlow Error. Make fit again")
+                else:
+                    pass
+            else:
+                self.FIT_RUN = 0
+                self.chan_err_mess.setValue("Curr")
+        else:
+            self.FIT_RUN = 0
+            # self.chan_err_mess.setValue("Low signal")
+
+    @staticmethod
+    def erf(x):
+        erf_x = np.empty_like(x, dtype=np.float64)
+        for i in range(0, len(x)):
+            erf_x[i] = 2 * integrate.quad(lambda t: mh.exp(-t**2), 0, x[i])[0] / mh.sqrt(mh.pi)
+        return erf_x
+
+    @staticmethod
+    def x_average(x, y):
+        return integrate.trapz(x * y, x) / integrate.trapz(y, x)
+
+    @staticmethod
+    def beam_size(x, y):
+        half_am = np.max(y) / 2
+        x_half = np.where(y > half_am)
+        beam_fwhm = x[x_half[0][-1]] - x[x_half[0][0]]
+        return beam_fwhm
+
+    @staticmethod
+    def x_average_error(x, y, dy, x_av):
+        return integrate.trapz(x * (dy + y), x) / integrate.trapz(y+dy, x) - x_av
+
+    def fit_switch(self):
+        self.FIT_CHOOSE = self.chan_fit_switch.val
+
+    def make_model_fit(self):
+        if self.chan_make_model_fit.val:
+            self.FIT_RUN = self.chan_make_model_fit.val
 
 
 def main_proc():
