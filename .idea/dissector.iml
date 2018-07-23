@@ -9,6 +9,7 @@
     <orderEntry type="module" module-name="untitled1" />
     <orderEntry type="module" module-name="data_base" />
     <orderEntry type="module" module-name="bpm" />
+    <orderEntry type="module" module-name="ic_watcher" />
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />
