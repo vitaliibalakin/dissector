@@ -5,8 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/../bpm/.idea/bpm.iml" filepath="$PROJECT_DIR$/../bpm/.idea/bpm.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data_base/.idea/data_base.iml" filepath="$PROJECT_DIR$/../data_base/.idea/data_base.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dissector.iml" filepath="$PROJECT_DIR$/.idea/dissector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" filepath="$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" />
       <module fileurl="file://$PROJECT_DIR$/../KickerMonitor/.idea/untitled1.iml" filepath="$PROJECT_DIR$/../KickerMonitor/.idea/untitled1.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../untitled2/.idea/untitled2.iml" filepath="$PROJECT_DIR$/../untitled2/.idea/untitled2.iml" />
     </modules>
   </component>
 </project>

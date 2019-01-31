@@ -4,11 +4,12 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.5 (/usr/bin/python2.7)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.6" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="untitled1" />
     <orderEntry type="module" module-name="data_base" />
     <orderEntry type="module" module-name="bpm" />
+    <orderEntry type="module" module-name="ic_watcher" />
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />
