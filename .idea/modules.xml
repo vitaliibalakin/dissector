@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../bpm/.idea/bpm.iml" filepath="$PROJECT_DIR$/../bpm/.idea/bpm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../c_orbit/.idea/c_orbit.iml" filepath="$PROJECT_DIR$/../c_orbit/.idea/c_orbit.iml" />
       <module fileurl="file://$PROJECT_DIR$/../data_base/.idea/data_base.iml" filepath="$PROJECT_DIR$/../data_base/.idea/data_base.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dissector.iml" filepath="$PROJECT_DIR$/.idea/dissector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" filepath="$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" />
