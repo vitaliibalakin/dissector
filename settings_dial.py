@@ -1,9 +1,12 @@
-from PyQt4 import QtGui, uic
+#!/usr/bin/env python3
+
+from PyQt5.QtWidgets import QApplication, QDialog
+from PyQt5 import uic
 import sys
 import pycx4.qcda as cda
 
 
-class DialSet(QtGui.QDialog):
+class DialSet(QDialog):
     def __init__(self, chan_light, chan_phase, chan_ampl):
         super(DialSet, self).__init__()
         uic.loadUi("set_dial.ui", self)
@@ -51,7 +54,7 @@ class DialSet(QtGui.QDialog):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(['set'])
+    app = QApplication(['diss_set'])
     chan_ampl = cda.DChan("cxhw:18.diss208.out1")
     chan_phase = cda.DChan("cxhw:18.diss208.out0")
     chan_light = cda.DChan("cxhw:18.diss208.outrb0")

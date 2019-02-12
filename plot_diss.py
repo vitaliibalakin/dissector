@@ -1,6 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from PyQt4 import QtGui, uic
+from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout
+from PyQt5 import uic
 import save_dial
 import settings_dial
 import sys
@@ -8,10 +9,11 @@ import pyqtgraph as pg
 import pycx4.qcda as cda
 
 
-class PlotDissectorData(QtGui.QMainWindow):
+class PlotDissectorData(QMainWindow):
     def __init__(self, devname):
         super(PlotDissectorData, self).__init__()
         uic.loadUi("diss_plot.ui", self)
+        self.show()
 
         self.init_chans(devname)
 
@@ -27,7 +29,7 @@ class PlotDissectorData(QtGui.QMainWindow):
         self.diss_plot.setLabel('bottom', "Time", units='Ns')
         self.diss_plot.setRange(yRange=[-60, 300])
 
-        p = QtGui.QHBoxLayout()
+        p = QHBoxLayout()
         self.plot_area.setLayout(p)
         p.addWidget(self.plot_window)
 
@@ -102,7 +104,7 @@ class PlotDissectorData(QtGui.QMainWindow):
         self.statusbar.showMessage('model')
 
 
-app = QtGui.QApplication(['plot'])
-w = PlotDissectorData('cxhw:0.e_diss')
-w.show()
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    app = QApplication(['diss_plot'])
+    w = PlotDissectorData('cxhw:0.e_diss')
+    sys.exit(app.exec_())

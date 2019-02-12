@@ -1,11 +1,14 @@
-from PyQt4 import QtCore, QtGui, uic
+#!/usr/bin/env python3
+
+from PyQt5.QtWidgets import QApplication, QDialog
+from PyQt5 import uic
 import sys
 import datetime
 import numpy as np
 import pycx4.qcda as cda
 import json
 
-class DialSave(QtGui.QDialog):
+class DialSave(QDialog):
     def __init__(self, chan_sigma, chan_cur, chan_t0, chan_accuracy, chan_make_model_fit, chan_fit_data,
                  chan_time_fit_data):
         super(DialSave, self).__init__()
@@ -22,7 +25,7 @@ class DialSave(QtGui.QDialog):
         self.chan_sigma.valueMeasured.connect(self.new_val_cb)
         self.show()
 
-        self.connect(self.btn_save, QtCore.SIGNAL("clicked()"), self.push_btn_save)
+        self.btn_save.clicked.connect(self.push_btn_save)
 
         self.av_num = 0
         self.sv_open = 0
@@ -66,7 +69,7 @@ class DialSave(QtGui.QDialog):
         if self.counter:
             counter = self.counter
             self.counter -= 1
-            print counter
+            print(counter)
             self.chans['sigma'][counter - 1] = self.chan_sigma.val
             self.chans['beam_current'][counter - 1] = self.chan_cur.val
             self.chans['t_0'][counter - 1] = self.chan_t0.val
@@ -86,14 +89,14 @@ class DialSave(QtGui.QDialog):
                     f_osc.write(json.dumps(osc_data))
                     f_osc.write('\n')
                     f_osc.close()
-                print self.wr_data.T
+                print(self.wr_data.T)
                 self.lbl_status.setText("The value was saved")
         else:
             pass
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(['save'])
+    app = QApplication(['save'])
     chan_sigma = cda.DChan("cxhw:0.e_diss.fit_sigma")
     chan_cur = cda.DChan("cxhw:0.dcct.beamcurrent")
     chan_t0 = cda.DChan("cxhw:0.e_diss.fit_t0")

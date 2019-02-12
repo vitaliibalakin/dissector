@@ -1,12 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from PyQt4 import QtCore
 from scipy import optimize, integrate
 import sys
 import numpy as np
 import math as mh
-from acc_ctl.service_daemon import Service
-
+from aux.service_daemon import QtService
 import pycx4.qcda as cda
 
 
@@ -152,16 +150,12 @@ class DissApp(object):
             self.FIT_RUN = self.chan_make_model_fit.val
 
 
-def main_proc():
-    import cothread
+class DAService(QtService):
+    def main(self):
+        self.w = DissApp("cxhw:18.bal333_2.line3", 'cxhw:0.e_diss')
 
-    a = QtCore.QCoreApplication(sys.argv)
-    app = cothread.iqt()
-    w = DissApp("cxhw:18.bal333_2.line3", 'cxhw:0.e_diss')
-    cothread.WaitForQuit()
+    def clean(self):
+        self.log_str('exiting from diss')
 
 
-def clear_proc():
-    pass
-
-a = Service('dissector', main_proc, clear_proc)
+diss_d = DAService("dissector")
