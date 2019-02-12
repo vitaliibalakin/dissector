@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/../data_base/.idea/data_base.iml" filepath="$PROJECT_DIR$/../data_base/.idea/data_base.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/dissector.iml" filepath="$PROJECT_DIR$/.idea/dissector.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" filepath="$PROJECT_DIR$/../ic_watcher/.idea/ic_watcher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../kicker_monitor/.idea/kicker_monitor.iml" filepath="$PROJECT_DIR$/../kicker_monitor/.idea/kicker_monitor.iml" />
       <module fileurl="file://$PROJECT_DIR$/../KickerMonitor/.idea/untitled1.iml" filepath="$PROJECT_DIR$/../KickerMonitor/.idea/untitled1.iml" />
     </modules>
   </component>

@@ -10,6 +10,7 @@
     <orderEntry type="module" module-name="data_base" />
     <orderEntry type="module" module-name="c_orbit" />
     <orderEntry type="module" module-name="ic_watcher" />
+    <orderEntry type="module" module-name="kicker_monitor" />
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />
